@@ -227,15 +227,15 @@ BUSINESS_PAYBILL = '247247'
 BUSINESS_NUMBER = '0840182413804'
 
 # M-Pesa Configuration - Production Ready
-# Replace these with your actual Safaricom credentials
 MPESA_CONSUMER_KEY = os.environ.get('MPESA_CONSUMER_KEY', 'YOUR_CONSUMER_KEY_HERE')
 MPESA_CONSUMER_SECRET = os.environ.get('MPESA_CONSUMER_SECRET', 'YOUR_CONSUMER_SECRET_HERE')
 MPESA_PASSKEY = os.environ.get('MPESA_PASSKEY', 'YOUR_PASSKEY_HERE')
-MPESA_SHORTCODE = os.environ.get('MPESA_SHORTCODE', 'YOUR_SHORTCODE_HERE')
-MPESA_ENVIRONMENT = os.environ.get('MPESA_ENVIRONMENT', 'sandbox')
+MPESA_SHORTCODE = os.environ.get('MPESA_SHORTCODE', '174379')
+MPESA_ENVIRONMENT = os.environ.get('MPESA_ENVIRONMENT', 'production')
 MPESA_CALLBACK_URL = os.environ.get('MPESA_CALLBACK_URL')
-MPESA_IS_SANDBOX = os.environ.get('MPESA_IS_SANDBOX', 'True').lower() in ('true', '1', 'yes')
-MPESA_TEST_MODE = os.environ.get('MPESA_TEST_MODE', str(DEBUG)).lower() in ('true', '1', 'yes')
+MPESA_IS_SANDBOX = os.environ.get('MPESA_IS_SANDBOX', 'False').lower() in ('true', '1', 'yes')
+MPESA_TEST_MODE = os.environ.get('MPESA_TEST_MODE', 'False').lower() in ('true', '1', 'yes')
+BUSINESS_NUMBER = os.environ.get('BUSINESS_NUMBER', '0840182413804')
 
 # Auto-generate callback URLs
 if RENDER_EXTERNAL_HOSTNAME and not MPESA_CALLBACK_URL:

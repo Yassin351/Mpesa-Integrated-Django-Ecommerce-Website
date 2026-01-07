@@ -17,6 +17,18 @@ services:
         value: "False"
       - key: DJANGO_ALLOWED_HOSTS
         value: "mpesa-integrated-django-ecommerce.onrender.com,*.onrender.com,127.0.0.1,localhost"
+      - key: MPESA_CONSUMER_KEY
+        sync: false
+      - key: MPESA_CONSUMER_SECRET
+        sync: false
+      - key: MPESA_PASSKEY
+        sync: false
+      - key: MPESA_SHORTCODE
+        value: "174379"
+      - key: MPESA_IS_SANDBOX
+        value: "False"
+      - key: MPESA_TEST_MODE
+        value: "False"
       - key: PYTHONPATH
         value: "/opt/render/project/src"
 
