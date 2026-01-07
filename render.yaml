@@ -16,7 +16,7 @@ services:
       - key: DJANGO_DEBUG
         value: "False"
       - key: DJANGO_ALLOWED_HOSTS
-        value: "*"
+        value: "mpesa-integrated-django-ecommerce.onrender.com,*.onrender.com,127.0.0.1,localhost"
       - key: PYTHONPATH
         value: "/opt/render/project/src"
 
