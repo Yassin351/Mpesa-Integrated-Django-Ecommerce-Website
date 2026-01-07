@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+
+<div class="breadcrumbs">
+    <div class="container">
+        <div class="row">
+            <div class="col">
+                <p class="bread"><span><a href="{% url 'index' %}">Home</a></span> / <span>Sign Up</span></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="colorlib-product">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-6 offset-lg-3">
+                <div class="contact-wrap border p-4">
+                    <h2 class="text-center mb-4">Create Account</h2>
+                    <form method="post" id="signup-form">
+                        {% csrf_token %}
+                        
+                        {% if form.errors %}
+                        <div class="alert alert-danger">
+                            Please correct the errors below.
+                        </div>
+                        {% endif %}
+
+                        <div class="row">
+                            <div class="col-md-12">
+                                {% for field in form %}
+                                <div class="form-group">
+                                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                    {{ field }}
+                                    {% if field.help_text %}
+                                        <small class="text-muted d-block">{{ field.help_text|safe }}</small>
+                                    {% endif %}
+                                    {% if field.errors %}
+                                        {% for error in field.errors %}
+                                            <small class="text-danger d-block">{{ error }}</small>
+                                        {% endfor %}
+                                    {% endif %}
+                                </div>
+                                {% endfor %}
+                            </div>
+                            
+                            <div class="col-md-12 text-center mt-3">
+                                <button type="submit" class="btn btn-primary btn-lg w-100">Register Account</button>
+                            </div>
+                        </div>
+                    </form>
+                    <div class="text-center mt-4">
+                        <p>Already have an account? <a href="{% url 'account_login' %}">Login here</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    #signup-form input {
+        display: block;
+        width: 100%;
+        height: calc(2.25rem + 2px);
+        padding: 0.375rem 0.75rem;
+        font-size: 1rem;
+        font-weight: 400;
+        line-height: 1.5;
+        color: #495057;
+        background-color: #fff;
+        background-clip: padding-box;
+        border: 1px solid #ced4da;
+        border-radius: 0.25rem;
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    }
+    #signup-form input:focus {
+        border-color: #88c8bc;
+        outline: 0;
+        box-shadow: 0 0 0 0.2rem rgba(136, 200, 188, 0.25);
+    }
+    #signup-form ul {
+        list-style: none;
+        padding-left: 0;
+        font-size: 0.85rem;
+        color: #666;
+        margin-top: 5px;
+    }
+</style>
+
+{% endblock %}

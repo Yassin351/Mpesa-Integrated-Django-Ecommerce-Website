@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: mpesa-ecommerce
+    env: python
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn Ecoweb.wsgi:application"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.4
+      - key: DATABASE_URL
+        fromDatabase:
+          name: mpesa-ecommerce-db
+          property: connectionString
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DJANGO_DEBUG
+        value: False
+      - key: DJANGO_ALLOWED_HOSTS
+        value: "*"
+
+databases:
+  - name: mpesa-ecommerce-db
+    databaseName: mpesa_ecommerce
+    user: mpesa_user

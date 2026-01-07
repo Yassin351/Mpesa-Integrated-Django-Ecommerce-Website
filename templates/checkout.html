@@ -12,7 +12,6 @@
 			</div>
 		</div>
 
-
 		<div class="colorlib-product">
 			<div class="container">
 				<div class="row row-pb-lg">
@@ -35,95 +34,49 @@
 				</div>
 				<div class="row">
 					<div class="col-lg-8">
-						<form method="post" class="colorlib-form">
+						<form method="post" class="colorlib-form" id="checkout-form">
+							{% csrf_token %}
 							<h2>Billing Details</h2>
 		              	<div class="row">
-			               <div class="col-md-12">
-			                  <div class="form-group">
-			                  	<label for="country">Select Country</label>
-			                     <div class="form-field">
-			                     	<i class="icon icon-arrow-down3"></i>
-			                        <select name="people" id="people" class="form-control">
-				                      	<option value="#">Select country</option>
-				                        <option value="#">Alaska</option>
-				                        <option value="#">China</option>
-				                        <option value="#">Japan</option>
-				                        <option value="#">Korea</option>
-				                        <option value="#">Philippines</option>
-			                        </select>
-			                     </div>
-			                  </div>
-			               </div>
-
 								<div class="col-md-6">
 									<div class="form-group">
-										<label for="fname">First Name</label>
-										<input type="text" id="fname" class="form-control" placeholder="Your firstname">
+										<label for="first_name">First Name *</label>
+										<input type="text" name="first_name" id="first_name" class="form-control" placeholder="Your first name" required>
 									</div>
 								</div>
 								<div class="col-md-6">
 									<div class="form-group">
-										<label for="lname">Last Name</label>
-										<input type="text" id="lname" class="form-control" placeholder="Your lastname">
+										<label for="last_name">Last Name *</label>
+										<input type="text" name="last_name" id="last_name" class="form-control" placeholder="Your last name" required>
 									</div>
 								</div>
 
-								<div class="col-md-12">
-									<div class="form-group">
-										<label for="companyname">Company Name</label>
-			                    	<input type="text" id="companyname" class="form-control" placeholder="Company Name">
-			                  </div>
-			               </div>
-
 			               <div class="col-md-12">
 									<div class="form-group">
-										<label for="fname">Address</label>
-			                    	<input type="text" id="address" class="form-control" placeholder="Enter Your Address">
-			                  </div>
-			                  <div class="form-group">
-			                    	<input type="text" id="address2" class="form-control" placeholder="Second Address">
+										<label for="address">Address *</label>
+			                    	<input type="text" name="address" id="address" class="form-control" placeholder="Enter your address" required>
 			                  </div>
 			               </div>
 			            
 			               <div class="col-md-12">
 									<div class="form-group">
-										<label for="companyname">Town/City</label>
-			                    	<input type="text" id="towncity" class="form-control" placeholder="Town or City">
+										<label for="city">Town/City *</label>
+			                    	<input type="text" name="city" id="city" class="form-control" placeholder="Town or City" required>
 			                  </div>
 			               </div>
-			            
 								<div class="col-md-6">
 									<div class="form-group">
-										<label for="stateprovince">State/Province</label>
-										<input type="text" id="fname" class="form-control" placeholder="State Province">
+										<label for="email">Email Address *</label>
+										<input type="email" name="email" id="email" class="form-control" placeholder="your@email.com" required>
 									</div>
 								</div>
 								<div class="col-md-6">
 									<div class="form-group">
-										<label for="lname">Zip/Postal Code</label>
-										<input type="text" id="zippostalcode" class="form-control" placeholder="Zip / Postal">
-									</div>
-								</div>
-							
-								<div class="col-md-6">
-									<div class="form-group">
-										<label for="email">E-mail Address</label>
-										<input type="text" id="email" class="form-control" placeholder="State Province">
-									</div>
-								</div>
-								<div class="col-md-6">
-									<div class="form-group">
-										<label for="Phone">Phone Number</label>
-										<input type="text" id="zippostalcode" class="form-control" placeholder="">
-									</div>
-								</div>
-
-								<div class="col-md-12">
-									<div class="form-group">
-										<div class="radio">
-										  <label><input type="radio" name="optradio"> Create an Account? </label>
-										  <label><input type="radio" name="optradio"> Ship to different address</label>
-										</div>
+										<label for="phone">Phone Number *</label>
+										<input type="tel" name="phone" id="phone" class="form-control" 
+											   placeholder="0712345678 or 0123456789" 
+											   pattern="0[17][0-9]{8}" required>
+										<small class="text-muted">Enter Kenyan number starting with 07 or 01 (e.g. 0712345678)</small>
 									</div>
 								</div>
 		               </div>
@@ -134,18 +87,21 @@
 						<div class="row">
 							<div class="col-md-12">
 								<div class="cart-detail">
-									<h2>Cart Total</h2>
+									<h2>Order Summary</h2>
+									{% if object %}
 									<ul>
+										{% for order_item in object.items.all %}
 										<li>
-											<span>Subtotal</span> <span>$100.00</span>
-											<ul>
-												<li><span>1 x Product Name</span> <span>$99.00</span></li>
-												<li><span>1 x Product Name</span> <span>$78.00</span></li>
-											</ul>
+											<span>{{ order_item.quantity }} x {{ order_item.item.title }}</span> 
+											<span>KES {{ order_item.get_total_item_price|floatformat:2 }}</span>
 										</li>
-										<li><span>Shipping</span> <span>$0.00</span></li>
-										<li><span>Order Total</span> <span>$180.00</span></li>
+										{% endfor %}
+										<li><span>Shipping</span> <span>KES 0.00</span></li>
+										<li><strong><span>Total</span> <span>KES {{ object.get_total|floatformat:2 }}</span></strong></li>
 									</ul>
+									{% else %}
+									<p>No items in cart</p>
+									{% endif %}
 								</div>
 						   </div>
 
@@ -154,32 +110,65 @@
 						   <div class="col-md-12">
 								<div class="cart-detail">
 									<h2>Payment Method</h2>
-									<div class="form-group">
-										<div class="col-md-12">
+									<div class="payment-methods">
+										<div class="form-group">
 											<div class="radio">
-											   <label><input type="radio" name="optradio"> Direct Bank Tranfer</label>
+											   <label>
+											   	<input type="radio" name="payment_method" value="mpesa" checked> 
+											   	<strong>M-Pesa</strong> - Pay with your mobile money
+											   </label>
+											</div>
+											<div class="mpesa-details" id="mpesa-details">
+												<div class="form-group mt-2">
+													<label for="mpesa_phone">M-Pesa Phone Number *</label>
+													<input type="tel" name="mpesa_phone" id="mpesa_phone" class="form-control" 
+														   placeholder="0712345678 or 0123456789" 
+														   pattern="0[17][0-9]{8}">
+													<small class="text-muted">Enter the M-Pesa number starting with 07 or 01</small>
+												</div>
+												<div class="alert alert-info mt-2">
+													<strong>Payment Instructions:</strong><br>
+													1. You will receive an M-Pesa prompt on your phone<br>
+													2. Enter your M-Pesa PIN to confirm payment<br>
+													3. Payment goes to Paybill: <strong>247247</strong><br>
+													4. Account: <strong>0840182413804</strong>
+												</div>
+												{% if debug %}
+												<div class="alert alert-warning mt-2">
+													<strong>🧪 Test Mode Active (Localhost)</strong><br>
+													Use these test numbers for instant results:<br>
+													• <code>0700000000</code> - ✅ Success after 10 seconds<br>
+													• <code>0711111111</code> - ❌ Cancelled after 15 seconds<br>
+													• <code>0722222222</code> - ⚠️ Failed after 20 seconds<br>
+													<small><em>No real money will be charged in test mode</em></small>
+												</div>
+												{% endif %}
+											</div>
+										</div>
+										<div class="form-group">
+											<div class="radio">
+											   <label>
+											   	<input type="radio" name="payment_method" value="card"> 
+											   	<strong>Card/Bank</strong> - Pay with debit/credit card or bank transfer
+											   </label>
+											</div>
+											<div class="bank-details" id="bank-details" style="display: none;">
+												<div class="alert alert-info mt-2">
+													<strong>Bank/Card Instructions:</strong><br>
+													1. Click "Complete Secure Payment" below<br>
+													2. You will be redirected to our secure payment gateway (Pesapal)<br>
+													3. Select your preferred Bank or enter Card details<br>
+													4. Follow the on-screen instructions to complete payment
+												</div>
 											</div>
 										</div>
 									</div>
-									<div class="form-group">
-										<div class="col-md-12">
-											<div class="radio">
-											   <label><input type="radio" name="optradio"> Check Payment</label>
-											</div>
-										</div>
-									</div>
-									<div class="form-group">
-										<div class="col-md-12">
-											<div class="radio">
-											   <label><input type="radio" name="optradio"> Paypal</label>
-											</div>
-										</div>
-									</div>
-									<div class="form-group">
-										<div class="col-md-12">
-											<div class="checkbox">
-											   <label><input type="checkbox" value=""> I have read and accept the terms and conditions</label>
-											</div>
+									<div class="form-group mt-3">
+										<div class="checkbox">
+										   <label>
+										   	<input type="checkbox" id="terms" required> 
+										   	I agree to the <a href="#" target="_blank">terms and conditions</a>
+										   </label>
 										</div>
 									</div>
 								</div>
@@ -187,12 +176,141 @@
 						</div>
 						<div class="row">
 							<div class="col-md-12 text-center">
-								<p><a href="#" class="btn btn-primary">Place an order</a></p>
+								<button type="submit" form="checkout-form" class="btn btn-primary btn-lg" id="place-order-btn">
+									<span class="btn-text">Complete Secure Payment</span>
+									<span class="btn-loading" style="display: none;">
+										<i class="fa fa-spinner fa-spin"></i> Processing...
+									</span>
+								</button>
+								<p class="mt-2"><small class="text-muted">🔒 Your payment is secured by Pesapal</small></p>
 							</div>
 						</div>
 					</div>
 				</div>
 			</div>
 		</div>
-{% endblock %}
 
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const paymentMethods = document.querySelectorAll('input[name="payment_method"]');
+    const mpesaDetails = document.getElementById('mpesa-details');
+    const bankDetails = document.getElementById('bank-details');
+    const mpesaPhone = document.getElementById('mpesa_phone');
+    const phoneInput = document.getElementById('phone');
+    const form = document.getElementById('checkout-form');
+    const submitBtn = document.getElementById('place-order-btn');
+    
+    // Show/hide payment details based on selection
+    paymentMethods.forEach(method => {
+        method.addEventListener('change', function() {
+            if (this.value === 'mpesa') {
+                mpesaDetails.style.display = 'block';
+                bankDetails.style.display = 'none';
+                mpesaPhone.required = true;
+                // Auto-fill M-Pesa number from phone if valid
+                const phoneValue = phoneInput.value.replace(/\D/g, '');
+                if (phoneValue.length >= 9) {
+                    mpesaPhone.value = phoneInput.value;
+                }
+            } else if (this.value === 'card') {
+                mpesaDetails.style.display = 'none';
+                bankDetails.style.display = 'block';
+                mpesaPhone.required = false;
+            } else {
+                mpesaDetails.style.display = 'none';
+                bankDetails.style.display = 'none';
+                mpesaPhone.required = false;
+            }
+        });
+    });
+    
+    // Format phone numbers with strict 07/01 validation
+    function handlePhoneInput(e) {
+        let value = e.target.value.replace(/\D/g, '');
+        
+        // Strict enforcement of 07 or 01
+        if (value.length > 0) {
+            if (!value.startsWith('0')) {
+                value = '0' + value;
+            }
+            if (value.length >= 2) {
+                const prefix = value.substring(0, 2);
+                if (prefix !== '07' && prefix !== '01') {
+                    // If they typed 02, 03 etc, try to correct or just warn
+                    // Here we'll just let the validator handle the color feedback
+                }
+            }
+        }
+        
+        if (value.length > 10) value = value.substring(0, 10);
+        e.target.value = value;
+        
+        validatePhoneNumber(e.target);
+    }
+    
+    phoneInput.addEventListener('input', handlePhoneInput);
+    mpesaPhone.addEventListener('input', handlePhoneInput);
+    
+    function validatePhoneNumber(input) {
+        const value = input.value.replace(/\D/g, '');
+        const isValid = (value.startsWith('07') || value.startsWith('01')) && value.length === 10;
+        
+        if (value.length > 0 && !isValid) {
+            input.style.borderColor = '#dc3545';
+            if (!input.nextElementSibling || !input.nextElementSibling.classList.contains('error-msg')) {
+                const errorMsg = document.createElement('small');
+                errorMsg.className = 'text-danger error-msg d-block';
+                errorMsg.textContent = 'Must start with 07 or 01 and be 10 digits';
+                input.parentNode.appendChild(errorMsg);
+            }
+        } else {
+            input.style.borderColor = '';
+            const errorMsg = input.parentNode.querySelector('.error-msg');
+            if (errorMsg) {
+                errorMsg.remove();
+            }
+        }
+        return isValid;
+    }
+    
+    // Form submission with strict validation
+    form.addEventListener('submit', function(e) {
+        const selectedMethod = document.querySelector('input[name="payment_method"]:checked').value;
+        
+        // Validate phone numbers
+        const phoneValid = validatePhoneNumber(phoneInput);
+        
+        if (!phoneValid) {
+            e.preventDefault();
+            alert('Please enter a valid Kenyan phone number starting with 07 or 01 (10 digits)');
+            phoneInput.focus();
+            return;
+        }
+        
+        if (selectedMethod === 'mpesa') {
+            if (!mpesaPhone.value) {
+                e.preventDefault();
+                alert('Please enter your M-Pesa phone number');
+                mpesaPhone.focus();
+                return;
+            }
+            
+            const mpesaValid = validatePhoneNumber(mpesaPhone);
+            
+            if (!mpesaValid) {
+                e.preventDefault();
+                alert('Please enter a valid M-Pesa phone number starting with 07 or 01 (10 digits)');
+                mpesaPhone.focus();
+                return;
+            }
+        }
+        
+        // Show loading state
+        submitBtn.disabled = true;
+        document.querySelector('.btn-text').style.display = 'none';
+        document.querySelector('.btn-loading').style.display = 'inline';
+    });
+});
+</script>
+
+{% endblock %}

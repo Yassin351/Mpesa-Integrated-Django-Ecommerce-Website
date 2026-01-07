@@ -1,6 +1,8 @@
 from django.conf import settings
 from django.db import models
 from django.shortcuts import reverse
+from django.utils import timezone
+from decimal import Decimal
 
 SHOE_SIZES = (
     ('seven', '7'),
@@ -12,6 +14,20 @@ SHOE_SIZES = (
     ('thirteen', '13'),
     ('fourteen', '14'),
 
+)
+
+PAYMENT_STATUS_CHOICES = (
+    ('PENDING', 'Pending'),
+    ('COMPLETED', 'Completed'),
+    ('FAILED', 'Failed'),
+    ('CANCELLED', 'Cancelled'),
+)
+
+MPESA_TRANSACTION_STATUS = (
+    ('PENDING', 'Pending'),
+    ('SUCCESS', 'Success'),
+    ('FAILED', 'Failed'),
+    ('CANCELLED', 'Cancelled'),
 )
 
 
@@ -52,14 +68,45 @@ class Order(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     items = models.ManyToManyField(OrderItem)
     start_date = models.DateTimeField(auto_now_add=True)
-    ordered_date = models.DateTimeField()
+    ordered_date = models.DateTimeField(null=True, blank=True)
     ordered = models.BooleanField(default=False)
+    
+    # Payment fields
+    payment_status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default='PENDING')
+    pesapal_tracking_id = models.CharField(max_length=100, blank=True, null=True)
+    pesapal_merchant_reference = models.CharField(max_length=100, blank=True, null=True)
+    payment_method = models.CharField(max_length=50, blank=True, null=True)
+    customer_phone = models.CharField(max_length=20, blank=True, null=True)
+    
+    # Billing details
+    first_name = models.CharField(max_length=100, blank=True)
+    last_name = models.CharField(max_length=100, blank=True)
+    email = models.EmailField(blank=True)
+    phone = models.CharField(max_length=20, blank=True)
+    address = models.TextField(blank=True)
+    city = models.CharField(max_length=100, blank=True)
 
     def __str__(self):
-        return self.user.username
+        return f"Order #{self.id} - {self.user.username}"
 
     def get_total(self):
         total = 0
         for order_item in self.items.all():
             total += order_item.get_total_item_price()
         return total
+
+
+class MpesaTransaction(models.Model):
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='mpesa_transactions')
+    checkout_request_id = models.CharField(max_length=100, unique=True)
+    merchant_request_id = models.CharField(max_length=100)
+    phone_number = models.CharField(max_length=15)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    mpesa_receipt_number = models.CharField(max_length=50, blank=True, null=True)
+    transaction_date = models.DateTimeField(blank=True, null=True)
+    status = models.CharField(max_length=20, choices=MPESA_TRANSACTION_STATUS, default='PENDING')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return f"M-Pesa Transaction {self.checkout_request_id} - {self.status}"

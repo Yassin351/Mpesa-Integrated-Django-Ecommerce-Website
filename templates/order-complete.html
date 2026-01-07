@@ -2,48 +2,100 @@
 {% load static %}
 {% block content %}
 
-		<div class="breadcrumbs">
-			<div class="container">
-				<div class="row">
-					<div class="col">
-						<p class="bread"><span><a href="{% url 'index' %}">Home</a></span> / <span>Purchase Complete</span></p>
-					</div>
-				</div>
-			</div>
-		</div>
+<div class="breadcrumbs">
+    <div class="container">
+        <div class="row">
+            <div class="col">
+                <p class="bread"><span><a href="{% url 'Ecoweb:index' %}">Home</a></span> / <span>Order Complete</span></p>
+            </div>
+        </div>
+    </div>
+</div>
 
+<div class="colorlib-product">
+    <div class="container">
+        <div class="row row-pb-lg">
+            <div class="col-sm-10 offset-md-1">
+                <div class="process-wrap">
+                    <div class="process text-center active">
+                        <p><span>01</span></p>
+                        <h3>Shopping Cart</h3>
+                    </div>
+                    <div class="process text-center active">
+                        <p><span>02</span></p>
+                        <h3>Checkout</h3>
+                    </div>
+                    <div class="process text-center active">
+                        <p><span>03</span></p>
+                        <h3>Order Complete</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-8 offset-sm-2 text-center">
+                <div class="order-complete-content">
+                    <div class="success-icon mb-4">
+                        <i class="icon-check" style="font-size: 4rem; color: #28a745;"></i>
+                    </div>
+                    <h2 class="mb-3">Thank You for Your Order!</h2>
+                    <p class="lead mb-4">Your payment has been processed successfully and your order is confirmed.</p>
+                    
+                    <div class="order-details bg-light p-4 rounded mb-4">
+                        <h4>What happens next?</h4>
+                        <ul class="list-unstyled mt-3">
+                            <li class="mb-2">📧 You'll receive an order confirmation email shortly</li>
+                            <li class="mb-2">📦 We'll prepare your items for shipping</li>
+                            <li class="mb-2">🚚 You'll get tracking information once shipped</li>
+                            <li class="mb-2">📱 Check your M-Pesa for payment confirmation</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="action-buttons">
+                        <a href="{% url 'Ecoweb:index' %}" class="btn btn-primary btn-lg mr-3">Continue Shopping</a>
+                        <a href="{% url 'Ecoweb:contact' %}" class="btn btn-outline-secondary btn-lg">Contact Support</a>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <small class="text-muted">Need help? Contact us at support@yayhashops.com or call +254 700 000 000</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
-		<div class="colorlib-product">
-			<div class="container">
-				<div class="row row-pb-lg">
-					<div class="col-sm-10 offset-md-1">
-						<div class="process-wrap">
-							<div class="process text-center active">
-								<p><span>01</span></p>
-								<h3>Shopping Cart</h3>
-							</div>
-							<div class="process text-center active">
-								<p><span>02</span></p>
-								<h3>Checkout</h3>
-							</div>
-							<div class="process text-center active">
-								<p><span>03</span></p>
-								<h3>Order Complete</h3>
-							</div>
-						</div>
-					</div>
-				</div>
-				<div class="row">
-					<div class="col-sm-10 offset-sm-1 text-center">
-						<p class="icon-addcart"><span><i class="icon-check"></i></span></p>
-						<h2 class="mb-4">Thank you for purchasing, Your order is complete</h2>
-						<p>
-							<a href="{% url 'index' %}"class="btn btn-primary btn-outline-primary">Home</a>
-							<a href="{% url 'cart' %}"class="btn btn-primary btn-outline-primary"><i class="icon-shopping-cart"></i> Continue Shopping</a>
-						</p>
-					</div>
-				</div>
-			</div>
-		</div>
+<style>
+.order-complete-content {
+    padding: 3rem 0;
+}
+
+.success-icon {
+    animation: checkmark 0.6s ease-in-out;
+}
+
+@keyframes checkmark {
+    0% {
+        transform: scale(0);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.2);
+        opacity: 0.8;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.order-details {
+    border-left: 4px solid #28a745;
+}
+
+.action-buttons .btn {
+    min-width: 150px;
+}
+</style>
 
 {% endblock %}

@@ -10,21 +10,69 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 
+import os
 from pathlib import Path
+import dj_database_url
+from decouple import config
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Render Deployment Helpers
+RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-9nrjxd-nqv(bl(8_1kd0r6e&&!hp312e^j1#@eq&^+w^dalzu_'
+SECRET_KEY = os.environ.get(
+    'DJANGO_SECRET_KEY',
+    'django-insecure-9nrjxd-nqv(bl(8_1kd0r6e&&!hp312e^j1#@eq&^+w^dalzu_'
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DJANGO_DEBUG', os.environ.get('DEBUG', 'False')).lower() in ('true', '1', 'yes')
 
-ALLOWED_HOSTS = []
+# SSL and Security Settings
+SECURE_SSL_REDIRECT = False if DEBUG else (os.environ.get('DJANGO_SECURE_SSL_REDIRECT', 'True').lower() in ('true', '1', 'yes'))
+
+# Trust the X-Forwarded-Proto header from proxies (like Render)
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# Hosts and CSRF - Render optimized
+_allowed_hosts = os.environ.get('DJANGO_ALLOWED_HOSTS', '')
+if _allowed_hosts:
+    ALLOWED_HOSTS = [h.strip() for h in _allowed_hosts.split(',') if h.strip()]
+else:
+    ALLOWED_HOSTS = ['*'] if DEBUG else ['.onrender.com', '127.0.0.1', 'localhost']
+
+_csrf_trusted = os.environ.get('DJANGO_CSRF_TRUSTED_ORIGINS', '')
+if _csrf_trusted:
+    CSRF_TRUSTED_ORIGINS = [o.strip() for o in _csrf_trusted.split(',') if o.strip()]
+else:
+    if RENDER_EXTERNAL_HOSTNAME:
+        CSRF_TRUSTED_ORIGINS = [f'https://{RENDER_EXTERNAL_HOSTNAME}']
+    elif DEBUG:
+        CSRF_TRUSTED_ORIGINS = ['http://127.0.0.1:8000', 'http://localhost:8000']
+    else:
+        CSRF_TRUSTED_ORIGINS = []
+
+# Security headers and cookie settings
+SESSION_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_SAMESITE = 'Lax'
+if not DEBUG:
+    CSRF_COOKIE_SECURE = True
+    SESSION_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = int(os.environ.get('DJANGO_SECURE_HSTS_SECONDS', '31536000'))
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    SECURE_REFERRER_POLICY = os.environ.get('DJANGO_SECURE_REFERRER_POLICY', 'strict-origin-when-cross-origin')
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    X_FRAME_OPTIONS = os.environ.get('DJANGO_X_FRAME_OPTIONS', 'DENY')
 
 # Application definition
 
@@ -39,18 +87,21 @@ INSTALLED_APPS = [
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
+    'django_extensions',
     'Ecoweb'
 
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'allauth.account.middleware.AccountMiddleware',
 ]
 
 ROOT_URLCONF = 'Ecoweb.urls'
@@ -74,15 +125,19 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'Ecoweb.wsgi.application'
 
-# Database
-# https://docs.djangoproject.com/en/4.1/ref/settings/#databases
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+# Database - Render optimized
+DATABASE_URL = os.environ.get('DATABASE_URL')
+if DATABASE_URL:
+    DATABASES = {
+        'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600)
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
@@ -116,10 +171,13 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 STATICFILES_DIRS = [
     BASE_DIR / "static"
 ]
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage' if not DEBUG else 'django.contrib.staticfiles.storage.StaticFilesStorage'
+WHITENOISE_USE_FINDERS = DEBUG
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
@@ -134,7 +192,147 @@ AUTHENTICATION_BACKENDS = [
 SITE_ID = 1
 LOGIN_REDIRECT_URL = '/'
 
-import os
+# Email configuration
+if DEBUG:
+    EMAIL_BACKEND = os.environ.get('DJANGO_EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend')
+else:
+    EMAIL_BACKEND = os.environ.get('DJANGO_EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
+EMAIL_HOST = os.environ.get('DJANGO_EMAIL_HOST', '')
+EMAIL_PORT = int(os.environ.get('DJANGO_EMAIL_PORT', '587'))
+EMAIL_HOST_USER = os.environ.get('DJANGO_EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.environ.get('DJANGO_EMAIL_HOST_PASSWORD', '')
+EMAIL_USE_TLS = os.environ.get('DJANGO_EMAIL_USE_TLS', 'True').lower() in ('true','1','yes')
+EMAIL_USE_SSL = os.environ.get('DJANGO_EMAIL_USE_SSL', 'False').lower() in ('true','1','yes')
+DEFAULT_FROM_EMAIL = os.environ.get('DJANGO_DEFAULT_FROM_EMAIL', 'webmaster@localhost')
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# Pesapal Configuration
+PESAPAL_CONSUMER_KEY = os.environ.get('PESAPAL_CONSUMER_KEY', '3O5zLy+k7YTlamrZ+efC9r8XqYEMcv1l')
+PESAPAL_CONSUMER_SECRET = os.environ.get('PESAPAL_CONSUMER_SECRET', 'peHydzyxd0zBut2GaNdKpDN5HS8=')
+PESAPAL_IS_SANDBOX = os.environ.get('PESAPAL_IS_SANDBOX', 'True').lower() in ('true', '1', 'yes')
+
+# Dynamic Pesapal URLs
+PESAPAL_CALLBACK_URL = os.environ.get('PESAPAL_CALLBACK_URL')
+PESAPAL_IPN_URL = os.environ.get('PESAPAL_IPN_URL')
+
+if RENDER_EXTERNAL_HOSTNAME:
+    if not PESAPAL_CALLBACK_URL:
+        PESAPAL_CALLBACK_URL = f"https://{RENDER_EXTERNAL_HOSTNAME}/payment/callback/"
+    if not PESAPAL_IPN_URL:
+        PESAPAL_IPN_URL = f"https://{RENDER_EXTERNAL_HOSTNAME}/payment/ipn/"
+elif not PESAPAL_CALLBACK_URL:
+    PESAPAL_CALLBACK_URL = 'http://127.0.0.1:8000/payment/callback/'
+    PESAPAL_IPN_URL = 'http://127.0.0.1:8000/payment/ipn/'
+
+# Your Business Details
+BUSINESS_PAYBILL = '247247'
+BUSINESS_NUMBER = '0840182413804'
+
+# M-Pesa Configuration - Production Ready
+# Replace these with your actual Safaricom credentials
+MPESA_CONSUMER_KEY = os.environ.get('MPESA_CONSUMER_KEY', 'YOUR_CONSUMER_KEY_HERE')
+MPESA_CONSUMER_SECRET = os.environ.get('MPESA_CONSUMER_SECRET', 'YOUR_CONSUMER_SECRET_HERE')
+MPESA_PASSKEY = os.environ.get('MPESA_PASSKEY', 'YOUR_PASSKEY_HERE')
+MPESA_SHORTCODE = os.environ.get('MPESA_SHORTCODE', 'YOUR_SHORTCODE_HERE')
+MPESA_ENVIRONMENT = os.environ.get('MPESA_ENVIRONMENT', 'sandbox')
+MPESA_CALLBACK_URL = os.environ.get('MPESA_CALLBACK_URL')
+MPESA_IS_SANDBOX = os.environ.get('MPESA_IS_SANDBOX', 'True').lower() in ('true', '1', 'yes')
+MPESA_TEST_MODE = os.environ.get('MPESA_TEST_MODE', str(DEBUG)).lower() in ('true', '1', 'yes')
+
+# Auto-generate callback URLs
+if RENDER_EXTERNAL_HOSTNAME and not MPESA_CALLBACK_URL:
+    MPESA_CALLBACK_URL = f"https://{RENDER_EXTERNAL_HOSTNAME}/mpesa/callback/"
+elif DEBUG and not MPESA_CALLBACK_URL:
+    MPESA_CALLBACK_URL = "http://127.0.0.1:8000/mpesa/callback/"
+
+# M-Pesa URLs based on environment
+if MPESA_IS_SANDBOX:
+    MPESA_BASE_URL = 'https://sandbox.safaricom.co.ke'
+else:
+    MPESA_BASE_URL = 'https://api.safaricom.co.ke'
+
+# Caches - Render optimized
+REDIS_URL = os.environ.get('REDIS_URL')
+if REDIS_URL:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django_redis.cache.RedisCache',
+            'LOCATION': REDIS_URL,
+            'OPTIONS': {
+                'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+                'CONNECTION_POOL_KWARGS': {'max_connections': 20},
+            },
+            'TIMEOUT': 300,
+        }
+    }
+else:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'TIMEOUT': 300,
+        }
+    }
+
+# Logging - Render optimized
+LOG_LEVEL = os.environ.get('DJANGO_LOG_LEVEL', 'INFO')
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '[{levelname}] {asctime} {name}: {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': LOG_LEVEL,
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'mpesa': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+    },
+}
+
+# Performance optimizations for Render
+if not DEBUG:
+    # Disable migrations check in production
+    MIGRATION_MODULES = {}
+    
+    # Session optimization
+    SESSION_ENGINE = 'django.contrib.sessions.backends.cached_db'
+    SESSION_CACHE_ALIAS = 'default'
+    
+    # Template caching
+    TEMPLATES[0]['APP_DIRS'] = False
+    TEMPLATES[0]['OPTIONS']['loaders'] = [
+        ('django.template.loaders.cached.Loader', [
+            'django.template.loaders.filesystem.Loader',
+            'django.template.loaders.app_directories.Loader',
+        ]),
+    ]
+
+# Local Development Overrides - Ensures HTTP on localhost
+if DEBUG:
+    SECURE_SSL_REDIRECT = False
+    SECURE_HSTS_SECONDS = 0
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = False
+    SECURE_HSTS_PRELOAD = False
+    SESSION_COOKIE_SECURE = False
+    CSRF_COOKIE_SECURE = False

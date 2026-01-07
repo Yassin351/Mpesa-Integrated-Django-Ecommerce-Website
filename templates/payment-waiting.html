@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+
+<div class="colorlib-product">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-8 offset-md-2">
+                <div class="text-center">
+                    <div class="payment-waiting">
+                        <div class="spinner-border text-primary mb-3" role="status" id="loadingSpinner">
+                            <span class="sr-only">Loading...</span>
+                        </div>
+                        <h2 id="paymentTitle">Payment Processing</h2>
+                        <div class="alert alert-info" id="paymentAlert">
+                            <h4><i class="fa fa-mobile"></i> Check Your Phone</h4>
+                            <p>An M-Pesa payment prompt has been sent to your phone.</p>
+                            <p><strong>Please enter your M-Pesa PIN to complete the payment.</strong></p>
+                            <hr>
+                            <p><small>
+                                Payment Details:<br>
+                                Paybill: <strong>247247</strong><br>
+                                Account: <strong>0840182413804</strong><br>
+                                Amount: <strong>KES {{ amount }}</strong>
+                            </small></p>
+                        </div>
+                        <p id="statusMessage">This page will automatically redirect once payment is confirmed.</p>
+                        <div class="mt-3">
+                            <a href="{% url 'Ecoweb:cart' %}" class="btn btn-secondary">Back to Cart</a>
+                            <button id="retryPayment" class="btn btn-warning" style="display:none;">Retry Payment</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Set global variables for the payment handler
+window.checkoutRequestId = '{{ checkout_request_id }}';
+window.statusUrl = '{% url "Ecoweb:check_payment_status" checkout_request_id %}';
+window.completeUrl = '{% url "Ecoweb:complete" %}';
+window.checkoutUrl = '{% url "Ecoweb:checkout" %}';
+window.testAmount = '{{ amount }}';
+</script>
+<script src="{% static 'js/mpesa-payment.js' %}"></script>
+
+{% endblock %}
