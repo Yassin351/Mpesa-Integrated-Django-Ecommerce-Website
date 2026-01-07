@@ -4,7 +4,8 @@ services:
     env: python
     runtime: python-3.11.4
     buildCommand: "./build.sh"
-    startCommand: "gunicorn Ecoweb.wsgi:application"
+    startCommand: "gunicorn --bind 0.0.0.0:$PORT Ecoweb.wsgi:application"
+    plan: free
     envVars:
       - key: DATABASE_URL
         fromDatabase:
@@ -13,9 +14,11 @@ services:
       - key: DJANGO_SECRET_KEY
         generateValue: true
       - key: DJANGO_DEBUG
-        value: False
+        value: "False"
       - key: DJANGO_ALLOWED_HOSTS
         value: "*"
+      - key: PYTHONPATH
+        value: "/opt/render/project/src"
 
 databases:
   - name: mpesa-ecommerce-db
