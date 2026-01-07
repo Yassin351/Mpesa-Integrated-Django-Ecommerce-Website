@@ -9,7 +9,9 @@ from .views import(
  pesapal_callback,
  pesapal_ipn,
  mpesa_callback,
- check_payment_status
+ check_payment_status,
+ send_payment_confirmation,
+ send_payment_success_notification
 )
 
 
@@ -40,6 +42,8 @@ urlpatterns = [
     path('payment/ipn/', pesapal_ipn, name='pesapal_ipn'),
     path('mpesa/callback/', mpesa_callback, name='mpesa_callback'),
     path('check-payment-status/<str:checkout_request_id>/', check_payment_status, name='check_payment_status'),
+    path('api/send-phone-confirmation/', send_payment_confirmation, name='send_payment_confirmation'),
+    path('api/send-payment-success/', send_payment_success_notification, name='send_payment_success'),
 ]
 
 if settings.DEBUG:

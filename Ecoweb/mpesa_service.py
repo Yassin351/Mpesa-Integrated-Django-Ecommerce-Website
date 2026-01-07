@@ -129,11 +129,12 @@ class MpesaService:
             logger.info(f"STK Push Response: {result}")
             
             if response.status_code == 200 and result.get('ResponseCode') == '0':
+                logger.info(f"✅ STK push successful for {formatted_phone}")
                 return {
                     'status': 'success',
                     'checkout_request_id': result.get('CheckoutRequestID'),
                     'merchant_request_id': result.get('MerchantRequestID'),
-                    'message': 'STK push sent successfully'
+                    'message': f'Payment prompt sent to {formatted_phone}. Check your phone for M-Pesa notification.'
                 }
             else:
                 error_msg = result.get('errorMessage', result.get('ResponseDescription', 'Failed to initiate payment'))
@@ -210,7 +211,7 @@ class MpesaService:
             'status': 'success',
             'checkout_request_id': checkout_request_id,
             'merchant_request_id': f"test_merchant_{uuid.uuid4().hex[:10]}",
-            'message': 'Test STK push sent successfully'
+            'message': f'Test payment prompt sent to {phone_number}. This is a simulation for testing.'
         }
     
     def _get_test_status(self, checkout_request_id):

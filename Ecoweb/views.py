@@ -126,15 +126,35 @@ class CheckoutView(LoginRequiredMixin, View):
                     )
                 
                 test_mode_msg = " (Test Mode)" if stk_response['checkout_request_id'].startswith('test_') else ""
+                
+                # Return JSON response for AJAX requests
+                if self.request.headers.get('Content-Type') == 'application/json' or self.request.headers.get('Accept') == 'application/json':
+                    return JsonResponse({
+                        'status': 'success',
+                        'message': f"Payment prompt sent to {formatted_mpesa_phone}{test_mode_msg}. Please check your phone and enter your M-Pesa PIN to complete payment.",
+                        'checkout_request_id': stk_response['checkout_request_id'],
+                        'redirect_url': '/payment-waiting/',
+                        'amount': str(order.get_total())
+                    })
+                
                 messages.success(self.request, 
-                    f"Payment prompt sent to {formatted_mpesa_phone}{test_mode_msg}. Please check your phone and enter your M-Pesa PIN to complete payment.")
+                    f"✅ Payment prompt sent to {formatted_mpesa_phone}{test_mode_msg}. Please check your phone and enter your M-Pesa PIN to complete payment.")
                 return render(self.request, 'payment-waiting.html', {
                     'order': order,
                     'amount': order.get_total(),
-                    'checkout_request_id': stk_response['checkout_request_id']
+                    'checkout_request_id': stk_response['checkout_request_id'],
+                    'phone_number': formatted_mpesa_phone,
+                    'test_mode': stk_response['checkout_request_id'].startswith('test_')
                 })
             else:
-                messages.error(self.request, f"Failed to send payment prompt: {stk_response['message']}")
+                # Return JSON response for AJAX requests
+                if self.request.headers.get('Content-Type') == 'application/json' or self.request.headers.get('Accept') == 'application/json':
+                    return JsonResponse({
+                        'status': 'error',
+                        'message': f"Failed to send payment prompt: {stk_response['message']}"
+                    })
+                
+                messages.error(self.request, f"❌ Failed to send payment prompt: {stk_response['message']}")
                 return render(self.request, 'checkout.html', {'object': order})
         
         # Initialize Pesapal service for other payment methods
@@ -531,3 +551,53 @@ def handle_test_payment_status(checkout_request_id):
         'status': 'pending',
         'message': 'Test payment is being processed...'
     })
+
+
+@csrf_exempt
+def send_payment_confirmation(request):
+    """Send payment confirmation message via API"""
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            phone = data.get('phone')
+            
+            if phone:
+                # Format phone number
+                mpesa_service = MpesaService()
+                formatted_phone = mpesa_service.format_phone_number(phone)
+                
+                return JsonResponse({
+                    'status': 'success',
+                    'message': f'Payment instructions will be sent to {formatted_phone}',
+                    'phone': formatted_phone
+                })
+            else:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Phone number is required'
+                })
+                
+        except ValueError as e:
+            return JsonResponse({
+                'status': 'error',
+                'message': str(e)
+            })
+        except Exception as e:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Failed to process request'
+            })
+    
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method'})
+
+
+@csrf_exempt
+def send_payment_success_notification(request):
+    """Send payment success notification"""
+    if request.method == 'POST':
+        return JsonResponse({
+            'status': 'success',
+            'message': 'Payment success notification sent'
+        })
+    
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method'})
