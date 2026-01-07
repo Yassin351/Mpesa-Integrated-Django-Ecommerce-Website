@@ -44,11 +44,7 @@ SECURE_SSL_REDIRECT = False if DEBUG else (os.environ.get('DJANGO_SECURE_SSL_RED
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # Hosts and CSRF - Render optimized
-_allowed_hosts = os.environ.get('DJANGO_ALLOWED_HOSTS', '')
-if _allowed_hosts:
-    ALLOWED_HOSTS = [h.strip() for h in _allowed_hosts.split(',') if h.strip()]
-else:
-    ALLOWED_HOSTS = ['*'] if DEBUG else ['mpesa-integrated-django-ecommerce.onrender.com', '*.onrender.com', '127.0.0.1', 'localhost']
+ALLOWED_HOSTS = ['*']
 
 _csrf_trusted = os.environ.get('DJANGO_CSRF_TRUSTED_ORIGINS', '')
 if _csrf_trusted:
