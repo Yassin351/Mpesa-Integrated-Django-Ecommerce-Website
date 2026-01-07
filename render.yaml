@@ -2,11 +2,10 @@ services:
   - type: web
     name: mpesa-ecommerce
     env: python
+    runtime: python-3.11.4
     buildCommand: "./build.sh"
     startCommand: "gunicorn Ecoweb.wsgi:application"
     envVars:
-      - key: PYTHON_VERSION
-        value: 3.11.4
       - key: DATABASE_URL
         fromDatabase:
           name: mpesa-ecommerce-db
